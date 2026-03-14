@@ -24,7 +24,6 @@ export default async function AdminAuditsPage() {
       status,
       upload_rows,
       first_value_event,
-      stripe_checkout_session_id,
       created_at,
       payment_id
     `
