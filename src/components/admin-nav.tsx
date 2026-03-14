@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 type AdminNavProps = {
-  current: "audits" | "payments";
+  current: "audits" | "payments" | "inquiries";
 };
 
 export default function AdminNav({ current }: AdminNavProps) {
@@ -28,6 +28,15 @@ export default function AdminNav({ current }: AdminNavProps) {
         }`}
       >
         Payments
+      </Link>
+
+      <Link
+        href="/admin/inquiries"
+        className={`${baseClass} ${
+          current === "inquiries" ? activeClass : inactiveClass
+        }`}
+      >
+        Inquiries
       </Link>
 
       <Link
