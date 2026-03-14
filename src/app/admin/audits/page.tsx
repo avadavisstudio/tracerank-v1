@@ -24,6 +24,8 @@ export default async function AdminAuditsPage() {
       status,
       upload_rows,
       first_value_event,
+      payment_id,
+      stripe_checkout_session_id,
       created_at
     `
     )
@@ -45,7 +47,7 @@ export default async function AdminAuditsPage() {
               Audits
             </h1>
             <p className="mt-4 text-base leading-7 text-neutral-700">
-              Internal view of uploaded audits, status, and delivery state.
+              Internal view of uploaded audits, status, payment linkage, and delivery state.
             </p>
           </div>
         </section>
@@ -63,6 +65,8 @@ export default async function AdminAuditsPage() {
                     <th className="px-6 py-4 font-medium text-neutral-600">Status</th>
                     <th className="px-6 py-4 font-medium text-neutral-600">Rows</th>
                     <th className="px-6 py-4 font-medium text-neutral-600">First value event</th>
+                    <th className="px-6 py-4 font-medium text-neutral-600">Payment linked</th>
+                    <th className="px-6 py-4 font-medium text-neutral-600">Session linked</th>
                     <th className="px-6 py-4 font-medium text-neutral-600">Audit</th>
                   </tr>
                 </thead>
@@ -70,7 +74,7 @@ export default async function AdminAuditsPage() {
                 <tbody className="divide-y divide-neutral-200 bg-white">
                   {(audits || []).length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-6 py-8 text-neutral-600">
+                      <td colSpan={10} className="px-6 py-8 text-neutral-600">
                         No audits found yet.
                       </td>
                     </tr>
@@ -94,6 +98,12 @@ export default async function AdminAuditsPage() {
                         <td className="px-6 py-4 text-neutral-700">
                           {audit.first_value_event || "—"}
                         </td>
+                        <td className="px-6 py-4 text-neutral-700">
+                          {audit.payment_id ? "Yes" : "No"}
+                        </td>
+                        <td className="px-6 py-4 text-neutral-700">
+                          {audit.stripe_checkout_session_id ? "Yes" : "No"}
+                        </td>
                         <td className="px-6 py-4">
                           <Link
                             href={`/audit/${audit.id}`}
@@ -107,6 +117,15 @@ export default async function AdminAuditsPage() {
                   )}
                 </tbody>
               </table>
+            </div>
+
+            <div className="mt-8 flex gap-4 text-sm">
+              <Link
+                href="/admin/payments"
+                className="font-medium text-black underline underline-offset-4"
+              >
+                View payments
+              </Link>
             </div>
           </div>
         </section>
