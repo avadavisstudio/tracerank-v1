@@ -1,5 +1,6 @@
 import Link from "next/link";
 import SiteFooter from "@/components/site-footer";
+import AdminNav from "@/components/admin-nav";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 function formatDate(value: string | null) {
@@ -49,6 +50,10 @@ export default async function AdminAuditsPage() {
             <p className="mt-4 text-base leading-7 text-neutral-700">
               Internal view of uploaded audits, status, payment linkage, and delivery state.
             </p>
+
+            <div className="mt-8">
+              <AdminNav current="audits" />
+            </div>
           </div>
         </section>
 
@@ -117,15 +122,6 @@ export default async function AdminAuditsPage() {
                   )}
                 </tbody>
               </table>
-            </div>
-
-            <div className="mt-8 flex gap-4 text-sm">
-              <Link
-                href="/admin/payments"
-                className="font-medium text-black underline underline-offset-4"
-              >
-                View payments
-              </Link>
             </div>
           </div>
         </section>

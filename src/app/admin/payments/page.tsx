@@ -1,5 +1,6 @@
 import Link from "next/link";
 import SiteFooter from "@/components/site-footer";
+import AdminNav from "@/components/admin-nav";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 function formatDate(value: string | null) {
@@ -57,6 +58,10 @@ export default async function AdminPaymentsPage() {
               Internal view of checkout sessions, payment state, customer email,
               amount, and linked audits.
             </p>
+
+            <div className="mt-8">
+              <AdminNav current="payments" />
+            </div>
           </div>
         </section>
 
@@ -129,15 +134,6 @@ export default async function AdminPaymentsPage() {
                   )}
                 </tbody>
               </table>
-            </div>
-
-            <div className="mt-8 flex gap-4 text-sm">
-              <Link
-                href="/admin/audits"
-                className="font-medium text-black underline underline-offset-4"
-              >
-                View audits
-              </Link>
             </div>
           </div>
         </section>
