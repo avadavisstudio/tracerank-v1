@@ -1,9 +1,25 @@
-import Link from "next/link";
+const paymentLink =
+  process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_URL || "/start";
 
 const bullets = [
   "Pinpoint the stage where activation becomes unstable",
   "Measure time-to-first-value, retries, and abandonment",
   "Get a ranked fix list instead of another dashboard",
+];
+
+const builtFor = [
+  "B2B SaaS onboarding flows",
+  "AI tools with trust-heavy first value",
+  "Products with verification or setup friction",
+  "Teams that can see drop-off but cannot diagnose it",
+];
+
+const deliverables = [
+  "First-value rate",
+  "Main drop-off stage",
+  "Retry and repeated-effort signals",
+  "Median time to first value",
+  "Ranked immediate fix list",
 ];
 
 const faqs = [
@@ -13,9 +29,14 @@ const faqs = [
       "B2B SaaS and AI products with multi-step onboarding, setup, verification, or first-value flows.",
   },
   {
-    question: "What data do I need?",
+    question: "What do I need to provide?",
     answer:
       "A CSV export with user_id, session_id, event_name, stage, and occurred_at columns.",
+  },
+  {
+    question: "What do I receive?",
+    answer:
+      "One paid founding audit with activation diagnosis, stage breakdown, retry signals, and a ranked fix list.",
   },
   {
     question: "Is this a full analytics replacement?",
@@ -37,18 +58,18 @@ export default function HomePage() {
               Find where activation actually breaks.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-neutral-700">
-              Upload a journey event export and get a ranked diagnosis of the
-              stages, delays, retries, and abandonment patterns hurting first
-              value.
+              Buy a founding audit, upload a journey export, and get a ranked
+              diagnosis of the stages, delays, retries, and abandonment patterns
+              hurting first value.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/start"
+              <a
+                href={paymentLink}
                 className="inline-flex items-center justify-center rounded-full bg-black px-6 py-3 text-sm font-medium text-white transition hover:opacity-90"
               >
-                Start a TraceRank Audit
-              </Link>
+                Buy Founding Audit
+              </a>
 
               <a
                 href="#pricing"
@@ -92,92 +113,124 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl px-6 py-16 md:px-10">
           <div className="max-w-3xl">
             <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-500">
-              Why teams buy this
+              How it works
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight">
-              Most teams can see drop-off. Very few can explain where activation
-              first became fragile.
+              One payment. One upload. One diagnosis.
             </h2>
-            <p className="mt-4 text-base leading-7 text-neutral-700">
-              TraceRank isolates the point where progress weakens, confidence
-              drops, and time-to-value stretches. That gives founders and
-              product teams a clearer answer to what to fix first.
-            </p>
           </div>
 
           <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {bullets.map((bullet) => (
-              <div
-                key={bullet}
-                className="rounded-3xl border border-neutral-200 p-6"
-              >
-                <p className="text-base leading-7 text-neutral-800">{bullet}</p>
-              </div>
-            ))}
+            <div className="rounded-3xl border border-neutral-200 p-6">
+              <p className="text-sm font-medium text-neutral-500">01</p>
+              <h3 className="mt-3 text-xl font-semibold">Buy the audit</h3>
+              <p className="mt-3 text-base leading-7 text-neutral-700">
+                Pay for the founding audit through Stripe-hosted checkout.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-neutral-200 p-6">
+              <p className="text-sm font-medium text-neutral-500">02</p>
+              <h3 className="mt-3 text-xl font-semibold">Upload the journey</h3>
+              <p className="mt-3 text-base leading-7 text-neutral-700">
+                Submit your CSV export and define the first value event.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-neutral-200 p-6">
+              <p className="text-sm font-medium text-neutral-500">03</p>
+              <h3 className="mt-3 text-xl font-semibold">Get the diagnosis</h3>
+              <p className="mt-3 text-base leading-7 text-neutral-700">
+                TraceRank analyzes the flow and returns stage breakdowns and
+                ranked fixes.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       <section className="border-b border-neutral-200">
-        <div className="mx-auto max-w-6xl px-6 py-16 md:px-10">
-          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="rounded-3xl border border-neutral-200 p-8">
-              <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-500">
-                Specimen output
-              </p>
-              <h3 className="mt-3 text-2xl font-semibold tracking-tight">
-                Example audit snapshot
-              </h3>
-              <p className="mt-4 text-sm leading-7 text-neutral-700">
-                This activation flow is not failing because demand is weak. It
-                is failing because verification delay and repeated effort are
-                destabilizing trust before first value appears.
-              </p>
+        <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 md:px-10 lg:grid-cols-2">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-500">
+              Built for
+            </p>
+            <div className="mt-6 grid gap-4">
+              {builtFor.map((item) => (
+                <div
+                  key={item}
+                  className="rounded-3xl border border-neutral-200 p-5"
+                >
+                  <p className="text-base leading-7 text-neutral-800">{item}</p>
+                </div>
+              ))}
+            </div>
+          </div>
 
-              <div className="mt-8 grid gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl bg-neutral-50 p-4">
-                  <p className="text-sm text-neutral-500">Verify drop-off</p>
-                  <p className="mt-2 text-2xl font-semibold">48%</p>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-500">
+              What you get back
+            </p>
+            <div className="mt-6 grid gap-4">
+              {deliverables.map((item) => (
+                <div
+                  key={item}
+                  className="rounded-3xl border border-neutral-200 p-5"
+                >
+                  <p className="text-base leading-7 text-neutral-800">{item}</p>
                 </div>
-                <div className="rounded-2xl bg-neutral-50 p-4">
-                  <p className="text-sm text-neutral-500">Setup drop-off</p>
-                  <p className="mt-2 text-2xl font-semibold">23%</p>
-                </div>
-                <div className="rounded-2xl bg-neutral-50 p-4">
-                  <p className="text-sm text-neutral-500">First output rate</p>
-                  <p className="mt-2 text-2xl font-semibold">29%</p>
-                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-neutral-200">
+        <div className="mx-auto grid max-w-6xl gap-6 px-6 py-16 md:px-10 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-3xl border border-neutral-200 p-8">
+            <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-500">
+              Specimen output
+            </p>
+            <h3 className="mt-3 text-2xl font-semibold tracking-tight">
+              Example audit snapshot
+            </h3>
+            <p className="mt-4 text-sm leading-7 text-neutral-700">
+              This journey is not failing because demand is weak. It is failing
+              because verification delay and repeated effort are destabilizing
+              trust before first value appears.
+            </p>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-2xl bg-neutral-50 p-4">
+                <p className="text-sm text-neutral-500">Verify drop-off</p>
+                <p className="mt-2 text-2xl font-semibold">48%</p>
+              </div>
+              <div className="rounded-2xl bg-neutral-50 p-4">
+                <p className="text-sm text-neutral-500">Setup drop-off</p>
+                <p className="mt-2 text-2xl font-semibold">23%</p>
+              </div>
+              <div className="rounded-2xl bg-neutral-50 p-4">
+                <p className="text-sm text-neutral-500">First output rate</p>
+                <p className="mt-2 text-2xl font-semibold">29%</p>
               </div>
             </div>
+          </div>
 
-            <div className="rounded-3xl border border-neutral-200 p-8">
-              <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-500">
-                Ranked fix list
-              </p>
-              <ol className="mt-5 space-y-4 text-sm leading-7 text-neutral-800">
-                <li>
-                  <span className="font-semibold">1.</span> Reduce verification
-                  delay and surface progress state immediately after account
-                  creation.
-                </li>
-                <li>
-                  <span className="font-semibold">2.</span> Remove duplicate
-                  effort in setup and clarify the next required action.
-                </li>
-                <li>
-                  <span className="font-semibold">3.</span> Shorten the path to
-                  first visible output inside the trust-sensitive window.
-                </li>
-                <li>
-                  <span className="font-semibold">4.</span> Instrument retries
-                  and dead-end loops by stage.
-                </li>
-                <li>
-                  <span className="font-semibold">5.</span> Track time-to-first-
-                  value as a primary activation stability metric.
-                </li>
-              </ol>
+          <div className="rounded-3xl border border-neutral-200 p-8">
+            <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-500">
+              Required CSV schema
+            </p>
+            <div className="mt-6 space-y-3 text-sm leading-7 text-neutral-800">
+              <p>user_id</p>
+              <p>session_id</p>
+              <p>event_name</p>
+              <p>stage</p>
+              <p>occurred_at</p>
             </div>
+            <p className="mt-6 text-sm leading-7 text-neutral-600">
+              Initial audits do not require direct product integration. A clean
+              event export is enough.
+            </p>
           </div>
         </div>
       </section>
@@ -189,11 +242,10 @@ export default function HomePage() {
               Pricing
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight">
-              Founding Audit — $500
+              Founding Audit — $249
             </h2>
             <p className="mt-4 text-base leading-7 text-neutral-700">
-              One product journey. One event upload. One diagnosis. One ranked
-              fix list.
+              One journey export. One paid diagnosis. One ranked fix list.
             </p>
           </div>
 
@@ -203,16 +255,16 @@ export default function HomePage() {
               <li>Activation breakdown by stage</li>
               <li>First-value rate and time-to-value diagnosis</li>
               <li>Retry and abandonment signal review</li>
-              <li>Ranked fix list with next actions</li>
+              <li>Ranked immediate fix list</li>
             </ul>
 
             <div className="mt-8">
-              <Link
-                href="/start"
+              <a
+                href={paymentLink}
                 className="inline-flex items-center justify-center rounded-full bg-black px-6 py-3 text-sm font-medium text-white transition hover:opacity-90"
               >
-                Start a TraceRank Audit
-              </Link>
+                Buy Founding Audit
+              </a>
             </div>
           </div>
         </div>
@@ -253,17 +305,17 @@ export default function HomePage() {
               Stop guessing where activation breaks.
             </h2>
             <p className="mt-4 max-w-2xl text-base leading-7 text-white/80">
-              Upload the journey. Get the diagnosis. Fix what is actually
-              costing conversion.
+              Buy the audit, upload the journey, and get a diagnosis you can act
+              on.
             </p>
 
             <div className="mt-8">
-              <Link
-                href="/start"
+              <a
+                href={paymentLink}
                 className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-medium text-black transition hover:bg-neutral-200"
               >
-                Start a TraceRank Audit
-              </Link>
+                Buy Founding Audit
+              </a>
             </div>
           </div>
         </div>

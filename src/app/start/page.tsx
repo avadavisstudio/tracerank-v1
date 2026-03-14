@@ -9,11 +9,11 @@ export default function StartPage() {
             TraceRank Intake
           </p>
           <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">
-            Start a TraceRank Audit
+            Submit your paid audit intake
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-neutral-700">
-            Submit your journey export and define the first value event you want
-            measured. This intake is the front door for the founding audit.
+            Upload your journey export and define the first value event you want
+            measured. This intake powers the founding audit you already bought.
           </p>
         </div>
       </section>
@@ -30,11 +30,11 @@ export default function StartPage() {
                 What happens next
               </p>
               <ol className="mt-4 space-y-3 text-sm leading-7 text-neutral-700">
-                <li>1. You submit event-log intake details</li>
-                <li>2. Payment flow is triggered</li>
-                <li>3. CSV is parsed and validated</li>
-                <li>4. Journey analysis is generated</li>
-                <li>5. Ranked fixes are returned in the audit view</li>
+                <li>1. You submit paid intake details</li>
+                <li>2. CSV is parsed and validated</li>
+                <li>3. Journey analysis is generated</li>
+                <li>4. Audit view is created</li>
+                <li>5. You review breakdowns and ranked fixes</li>
               </ol>
             </div>
 
