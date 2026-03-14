@@ -1,7 +1,6 @@
 import SiteFooter from "@/components/site-footer";
 
-const paymentLink =
-  process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_URL || "/start";
+const paymentLink = "/buy";
 
 const builtFor = [
   "B2B SaaS onboarding flows",

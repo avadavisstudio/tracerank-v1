@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { analyzeJourney } from "@/lib/analysis";
+import { sendAuditReadyEmail } from "@/lib/email/send";
 
 export async function POST(req: Request) {
   try {
@@ -13,7 +14,7 @@ export async function POST(req: Request) {
 
     const { data: audit, error: auditError } = await supabaseAdmin
       .from("audits")
-      .select("id, first_value_event")
+      .select("id, email, product_name, first_value_event")
       .eq("id", auditId)
       .single();
 
@@ -47,6 +48,16 @@ export async function POST(req: Request) {
     if (updateError) {
       throw new Error(updateError.message || "Failed to save analysis.");
     }
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const auditUrl = `${siteUrl}/audit/${auditId}`;
+
+    await sendAuditReadyEmail({
+      to: audit.email,
+      productName: audit.product_name || null,
+      auditId,
+      auditUrl,
+    });
 
     return NextResponse.json({
       ok: true,

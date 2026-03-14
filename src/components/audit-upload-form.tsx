@@ -11,7 +11,13 @@ type FormState = {
   file: File | null;
 };
 
-export default function AuditUploadForm() {
+type AuditUploadFormProps = {
+  paymentSessionId: string;
+};
+
+export default function AuditUploadForm({
+  paymentSessionId,
+}: AuditUploadFormProps) {
   const router = useRouter();
 
   const [form, setForm] = useState<FormState>({
@@ -25,12 +31,19 @@ export default function AuditUploadForm() {
   const [status, setStatus] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const paymentVerified = Boolean(paymentSessionId);
+
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    if (!paymentVerified) {
+      setStatus("Payment verification is required before intake.");
+      return;
+    }
 
     if (!form.file) {
       setStatus("Please attach a CSV file.");
@@ -46,6 +59,7 @@ export default function AuditUploadForm() {
       body.append("company", form.company);
       body.append("productName", form.productName);
       body.append("firstValueEvent", form.firstValueEvent);
+      body.append("paymentSessionId", paymentSessionId);
       body.append("file", form.file);
 
       const uploadResponse = await fetch("/api/upload", {
@@ -94,6 +108,17 @@ export default function AuditUploadForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {!paymentVerified ? (
+        <div className="rounded-3xl border border-red-200 bg-red-50 p-5">
+          <p className="text-sm font-medium text-red-700">
+            Payment verification is required before submitting intake.
+          </p>
+          <p className="mt-2 text-sm leading-6 text-red-600">
+            Return to checkout and complete payment first.
+          </p>
+        </div>
+      ) : null}
+
       <div className="grid gap-6 md:grid-cols-2">
         <div>
           <label className="mb-2 block text-sm font-medium text-neutral-800">
@@ -168,8 +193,9 @@ export default function AuditUploadForm() {
           type="file"
           accept=".csv,text/csv"
           required
+          disabled={!paymentVerified}
           onChange={(e) => updateField("file", e.target.files?.[0] || null)}
-          className="block w-full rounded-2xl border border-neutral-300 px-4 py-3 text-sm file:mr-4 file:rounded-full file:border-0 file:bg-black file:px-4 file:py-2 file:text-sm file:font-medium file:text-white"
+          className="block w-full rounded-2xl border border-neutral-300 px-4 py-3 text-sm file:mr-4 file:rounded-full file:border-0 file:bg-black file:px-4 file:py-2 file:text-sm file:font-medium file:text-white disabled:opacity-60"
         />
         <p className="mt-2 text-sm text-neutral-500">
           Required columns: user_id, session_id, event_name, stage, occurred_at
@@ -186,7 +212,7 @@ export default function AuditUploadForm() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || !paymentVerified}
           className="inline-flex items-center justify-center rounded-full bg-black px-6 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting ? "Processing..." : "Submit audit intake"}

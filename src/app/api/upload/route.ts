@@ -1,16 +1,52 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { parseCsv } from "@/lib/csv";
+import { sendIntakeReceivedEmail } from "@/lib/email/send";
 
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
 
+    const paymentSessionId = String(formData.get("paymentSessionId") || "").trim();
     const email = String(formData.get("email") || "").trim();
     const company = String(formData.get("company") || "").trim();
     const productName = String(formData.get("productName") || "").trim();
     const firstValueEvent = String(formData.get("firstValueEvent") || "").trim();
     const file = formData.get("file");
+
+    if (!paymentSessionId) {
+      return NextResponse.json(
+        { error: "Verified payment session is required." },
+        { status: 400 }
+      );
+    }
+
+    const { data: payment, error: paymentError } = await supabaseAdmin
+      .from("payments")
+      .select("*")
+      .eq("stripe_checkout_session_id", paymentSessionId)
+      .single();
+
+    if (paymentError || !payment) {
+      return NextResponse.json(
+        { error: "Payment session not found." },
+        { status: 400 }
+      );
+    }
+
+    if (payment.status !== "paid") {
+      return NextResponse.json(
+        { error: "Payment has not been verified yet." },
+        { status: 400 }
+      );
+    }
+
+    if (payment.audit_id) {
+      return NextResponse.json(
+        { error: "This payment session has already been used for an audit." },
+        { status: 400 }
+      );
+    }
 
     if (!email) {
       return NextResponse.json({ error: "Work email is required." }, { status: 400 });
@@ -46,11 +82,12 @@ export async function POST(req: Request) {
     }
 
     const parsedRows = parseCsv(fileText);
+    const finalEmail = payment.stripe_customer_email || email;
 
     const { data: audit, error: auditError } = await supabaseAdmin
       .from("audits")
       .insert({
-        email,
+        email: finalEmail,
         company: company || null,
         product_name: productName || null,
         first_value_event: firstValueEvent,
@@ -95,6 +132,17 @@ export async function POST(req: Request) {
       throw new Error(eventsError.message || "Failed to store event rows.");
     }
 
+    const { error: paymentUpdateError } = await supabaseAdmin
+      .from("payments")
+      .update({
+        audit_id: audit.id,
+      })
+      .eq("id", payment.id);
+
+    if (paymentUpdateError) {
+      throw new Error(paymentUpdateError.message || "Failed to link payment to audit.");
+    }
+
     const { error: updateError } = await supabaseAdmin
       .from("audits")
       .update({
@@ -105,6 +153,14 @@ export async function POST(req: Request) {
     if (updateError) {
       throw new Error(updateError.message || "Failed to update audit file path.");
     }
+
+    await sendIntakeReceivedEmail({
+      to: finalEmail,
+      productName: productName || null,
+      auditId: audit.id,
+      firstValueEvent,
+      uploadRows: parsedRows.length,
+    });
 
     return NextResponse.json({
       ok: true,

@@ -1,7 +1,16 @@
 import AuditUploadForm from "@/components/audit-upload-form";
 import SiteFooter from "@/components/site-footer";
 
-export default function StartPage() {
+type StartPageProps = {
+  searchParams: Promise<{
+    payment_session_id?: string;
+  }>;
+};
+
+export default async function StartPage({ searchParams }: StartPageProps) {
+  const params = await searchParams;
+  const paymentSessionId = params.payment_session_id || "";
+
   return (
     <>
       <main className="min-h-screen bg-white text-black">
@@ -33,7 +42,7 @@ export default function StartPage() {
         <section>
           <div className="mx-auto grid max-w-5xl gap-10 px-6 py-14 md:px-10 lg:grid-cols-[1.15fr_0.85fr]">
             <div>
-              <AuditUploadForm />
+              <AuditUploadForm paymentSessionId={paymentSessionId} />
             </div>
 
             <aside className="space-y-6">
