@@ -17,6 +17,16 @@ export default function StartPage() {
               Upload your journey export and define the first value event you want
               measured. This intake powers the founding audit you already bought.
             </p>
+
+            <div className="mt-6">
+              <a
+                href="/sample-tracerank-events.csv"
+                download
+                className="inline-flex items-center justify-center rounded-full border border-neutral-300 px-5 py-2.5 text-sm font-medium text-black transition hover:bg-neutral-50"
+              >
+                Download sample CSV
+              </a>
+            </div>
           </div>
         </section>
 

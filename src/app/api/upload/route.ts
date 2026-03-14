@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     const file = formData.get("file");
 
     if (!email) {
-      return NextResponse.json({ error: "Email is required." }, { status: 400 });
+      return NextResponse.json({ error: "Work email is required." }, { status: 400 });
     }
 
     if (!firstValueEvent) {
@@ -27,15 +27,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "CSV file is required." }, { status: 400 });
     }
 
-    const fileText = await file.text();
-    const parsedRows = parseCsv(fileText);
+    const fileName = file.name.toLowerCase();
 
-    if (parsedRows.length === 0) {
+    if (!fileName.endsWith(".csv")) {
       return NextResponse.json(
-        { error: "CSV contains no valid rows." },
+        { error: "Only .csv files are accepted." },
         { status: 400 }
       );
     }
+
+    const fileText = await file.text();
+
+    if (!fileText.trim()) {
+      return NextResponse.json(
+        { error: "CSV file is empty." },
+        { status: 400 }
+      );
+    }
+
+    const parsedRows = parseCsv(fileText);
 
     const { data: audit, error: auditError } = await supabaseAdmin
       .from("audits")
@@ -71,9 +81,9 @@ export async function POST(req: Request) {
     const eventRows = parsedRows.map((row) => ({
       audit_id: audit.id,
       user_id: row.user_id,
-      session_id: row.session_id || null,
+      session_id: row.session_id,
       event_name: row.event_name,
-      stage: row.stage || null,
+      stage: row.stage,
       occurred_at: row.occurred_at,
     }));
 
@@ -106,6 +116,6 @@ export async function POST(req: Request) {
     const message =
       error instanceof Error ? error.message : "Upload request failed.";
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }

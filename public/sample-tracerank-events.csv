@@ -1,0 +1,10 @@
+user_id,session_id,event_name,stage,occurred_at
+u1,s1,visit,Visit,2026-03-13T09:00:00Z
+u1,s1,create_account,Create Account,2026-03-13T09:01:00Z
+u1,s1,verify_email,Verify,2026-03-13T09:03:00Z
+u1,s1,first_output,First Output,2026-03-13T09:05:00Z
+u2,s2,visit,Visit,2026-03-13T09:10:00Z
+u2,s2,create_account,Create Account,2026-03-13T09:11:00Z
+u2,s2,verify_email,Verify,2026-03-13T09:15:00Z
+u3,s3,visit,Visit,2026-03-13T09:20:00Z
+u3,s3,create_account,Create Account,2026-03-13T09:22:00Z

@@ -151,9 +151,19 @@ export default function AuditUploadForm() {
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-neutral-800">
-          Journey CSV
-        </label>
+        <div className="mb-2 flex items-center justify-between gap-4">
+          <label className="block text-sm font-medium text-neutral-800">
+            Journey CSV
+          </label>
+          <a
+            href="/sample-tracerank-events.csv"
+            download
+            className="text-sm font-medium text-black underline underline-offset-4"
+          >
+            Download sample CSV
+          </a>
+        </div>
+
         <input
           type="file"
           accept=".csv,text/csv"
@@ -182,7 +192,7 @@ export default function AuditUploadForm() {
           {isSubmitting ? "Processing..." : "Submit audit intake"}
         </button>
 
-        <p className="text-sm text-neutral-600">{status}</p>
+        <p className="text-sm text-neutral-700">{status}</p>
       </div>
     </form>
   );

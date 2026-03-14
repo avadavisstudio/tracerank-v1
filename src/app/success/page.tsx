@@ -18,13 +18,21 @@ export default function SuccessPage() {
               first value event you want measured.
             </p>
 
-            <div className="mt-8">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/start"
                 className="inline-flex items-center justify-center rounded-full bg-black px-6 py-3 text-sm font-medium text-white transition hover:opacity-90"
               >
                 Continue to intake
               </Link>
+
+              <a
+                href="/sample-tracerank-events.csv"
+                download
+                className="inline-flex items-center justify-center rounded-full border border-neutral-300 px-6 py-3 text-sm font-medium text-black transition hover:bg-neutral-50"
+              >
+                Download sample CSV
+              </a>
             </div>
           </div>
         </section>
