@@ -1,6 +1,7 @@
 import Link from "next/link";
 import SiteFooter from "@/components/site-footer";
 import AdminNav from "@/components/admin-nav";
+import AdminFilterBar from "@/components/admin-filter-bar";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 function formatDate(value: string | null) {
@@ -20,8 +21,21 @@ function formatAmount(amount: number | null, currency: string | null) {
   return `${normalizedCurrency} ${(amount / 100).toFixed(2)}`;
 }
 
-export default async function AdminPaymentsPage() {
-  const { data: payments, error } = await supabaseAdmin
+type AdminPaymentsPageProps = {
+  searchParams: Promise<{
+    q?: string;
+    status?: string;
+  }>;
+};
+
+export default async function AdminPaymentsPage({
+  searchParams,
+}: AdminPaymentsPageProps) {
+  const params = await searchParams;
+  const q = (params.q || "").trim();
+  const status = (params.status || "").trim();
+
+  let query = supabaseAdmin
     .from("payments")
     .select(
       `
@@ -38,6 +52,18 @@ export default async function AdminPaymentsPage() {
     `
     )
     .order("created_at", { ascending: false });
+
+  if (status) {
+    query = query.eq("status", status);
+  }
+
+  if (q) {
+    query = query.or(
+      `stripe_customer_email.ilike.%${q}%,stripe_checkout_session_id.ilike.%${q}%,stripe_payment_intent_id.ilike.%${q}%`
+    );
+  }
+
+  const { data: payments, error } = await query;
 
   if (error) {
     throw new Error(error.message || "Failed to load payments.");
@@ -62,11 +88,25 @@ export default async function AdminPaymentsPage() {
             <div className="mt-8">
               <AdminNav current="payments" />
             </div>
+
+            <div className="mt-6">
+              <AdminFilterBar
+                action="/admin/payments"
+                searchPlaceholder="Search email, session, or payment intent"
+                defaultQuery={q}
+                defaultStatus={status}
+                statusOptions={["created", "paid", "expired"]}
+              />
+            </div>
           </div>
         </section>
 
         <section>
           <div className="mx-auto max-w-7xl px-6 py-14 md:px-10">
+            <div className="mb-4 text-sm text-neutral-600">
+              {(payments || []).length} result{(payments || []).length === 1 ? "" : "s"}
+            </div>
+
             <div className="overflow-hidden rounded-3xl border border-neutral-200">
               <table className="min-w-full divide-y divide-neutral-200 text-left text-sm">
                 <thead className="bg-neutral-50">
@@ -86,7 +126,7 @@ export default async function AdminPaymentsPage() {
                   {(payments || []).length === 0 ? (
                     <tr>
                       <td colSpan={8} className="px-6 py-8 text-neutral-600">
-                        No payments found yet.
+                        No payments found.
                       </td>
                     </tr>
                   ) : (

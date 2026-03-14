@@ -1,6 +1,7 @@
 import Link from "next/link";
 import SiteFooter from "@/components/site-footer";
 import AdminNav from "@/components/admin-nav";
+import AdminFilterBar from "@/components/admin-filter-bar";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 function formatDate(value: string | null) {
@@ -13,8 +14,21 @@ function formatDate(value: string | null) {
   return date.toLocaleString();
 }
 
-export default async function AdminAuditsPage() {
-  const { data: audits, error } = await supabaseAdmin
+type AdminAuditsPageProps = {
+  searchParams: Promise<{
+    q?: string;
+    status?: string;
+  }>;
+};
+
+export default async function AdminAuditsPage({
+  searchParams,
+}: AdminAuditsPageProps) {
+  const params = await searchParams;
+  const q = (params.q || "").trim();
+  const status = (params.status || "").trim();
+
+  let query = supabaseAdmin
     .from("audits")
     .select(
       `
@@ -31,6 +45,18 @@ export default async function AdminAuditsPage() {
     `
     )
     .order("created_at", { ascending: false });
+
+  if (status) {
+    query = query.eq("status", status);
+  }
+
+  if (q) {
+    query = query.or(
+      `email.ilike.%${q}%,company.ilike.%${q}%,product_name.ilike.%${q}%`
+    );
+  }
+
+  const { data: audits, error } = await query;
 
   if (error) {
     throw new Error(error.message || "Failed to load audits.");
@@ -54,11 +80,25 @@ export default async function AdminAuditsPage() {
             <div className="mt-8">
               <AdminNav current="audits" />
             </div>
+
+            <div className="mt-6">
+              <AdminFilterBar
+                action="/admin/audits"
+                searchPlaceholder="Search email, company, or product"
+                defaultQuery={q}
+                defaultStatus={status}
+                statusOptions={["pending", "uploaded", "analyzed"]}
+              />
+            </div>
           </div>
         </section>
 
         <section>
           <div className="mx-auto max-w-7xl px-6 py-14 md:px-10">
+            <div className="mb-4 text-sm text-neutral-600">
+              {(audits || []).length} result{(audits || []).length === 1 ? "" : "s"}
+            </div>
+
             <div className="overflow-hidden rounded-3xl border border-neutral-200">
               <table className="min-w-full divide-y divide-neutral-200 text-left text-sm">
                 <thead className="bg-neutral-50">
@@ -80,7 +120,7 @@ export default async function AdminAuditsPage() {
                   {(audits || []).length === 0 ? (
                     <tr>
                       <td colSpan={10} className="px-6 py-8 text-neutral-600">
-                        No audits found yet.
+                        No audits found.
                       </td>
                     </tr>
                   ) : (
