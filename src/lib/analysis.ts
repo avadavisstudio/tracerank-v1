@@ -24,6 +24,12 @@ type RetryMetric = {
   count: number;
 };
 
+type RankedFix = {
+  title: string;
+  why: string;
+  priority: "High" | "Medium" | "Low";
+};
+
 export type AnalysisResult = {
   totalSessions: number;
   sessionsReachedFirstValue: number;
@@ -32,6 +38,9 @@ export type AnalysisResult = {
   mostCommonDropoffStage: string | null;
   stageMetrics: StageMetric[];
   topRetryEvents: RetryMetric[];
+  auditSnapshot: string;
+  rankedFixes: RankedFix[];
+  instrumentationCoverage: string;
 };
 
 function median(values: number[]): number | null {
@@ -45,6 +54,104 @@ function median(values: number[]): number | null {
   }
 
   return sorted[middle];
+}
+
+function buildAuditSnapshot(args: {
+  totalSessions: number;
+  sessionsReachedFirstValue: number;
+  firstValueRate: number;
+  mostCommonDropoffStage: string | null;
+  topRetryEvents: RetryMetric[];
+  firstValueEvent: string;
+}) {
+  const {
+    totalSessions,
+    sessionsReachedFirstValue,
+    firstValueRate,
+    mostCommonDropoffStage,
+    topRetryEvents,
+    firstValueEvent,
+  } = args;
+
+  const dropoffStage = mostCommonDropoffStage || "an unlabeled stage";
+  const retrySignal = topRetryEvents[0]?.event_name || "no major repeated event";
+  const percent = Math.round(firstValueRate * 100);
+
+  return `This audit reviewed ${totalSessions} sessions. ${sessionsReachedFirstValue} sessions reached the target first value event "${firstValueEvent}", producing a first-value rate of ${percent}%. The primary breakdown concentrates around ${dropoffStage}, and the strongest repeated-effort signal appears around ${retrySignal}. The highest-leverage opportunity is reducing friction before or within ${dropoffStage} so more sessions reach first value with less repeated effort.`;
+}
+
+function buildRankedFixes(args: {
+  mostCommonDropoffStage: string | null;
+  topRetryEvents: RetryMetric[];
+  medianTimeToFirstValueSeconds: number | null;
+  stageMetrics: StageMetric[];
+}) {
+  const {
+    mostCommonDropoffStage,
+    topRetryEvents,
+    medianTimeToFirstValueSeconds,
+    stageMetrics,
+  } = args;
+
+  const fixes: RankedFix[] = [];
+  const mainStage = mostCommonDropoffStage || "the main breakdown stage";
+  const topRetry = topRetryEvents[0]?.event_name;
+
+  fixes.push({
+    title: `Fix friction inside ${mainStage}`,
+    why: `This stage holds the strongest concentration of abandonment and should be addressed before downstream redesign.`,
+    priority: "High",
+  });
+
+  if (topRetry) {
+    fixes.push({
+      title: `Reduce repeated effort around ${topRetry}`,
+      why: `Repeated event attempts usually indicate confusion, failure states, or unnecessary loops.`,
+      priority: "High",
+    });
+  }
+
+  if (
+    typeof medianTimeToFirstValueSeconds === "number" &&
+    medianTimeToFirstValueSeconds > 180
+  ) {
+    fixes.push({
+      title: "Shorten time to first value",
+      why: `The current path to first value is slow enough to create avoidable drop-off before visible payoff appears.`,
+      priority: "High",
+    });
+  }
+
+  const unlabeledStage = stageMetrics.find((stage) => stage.stage === "Unlabeled");
+  if (unlabeledStage) {
+    fixes.push({
+      title: "Improve journey instrumentation",
+      why: `Unlabeled events weaken diagnostic quality and make prioritization less reliable.`,
+      priority: "Medium",
+    });
+  }
+
+  fixes.push({
+    title: "Track stage-level retries and abandonment over time",
+    why: `Ongoing measurement is required to verify whether changes actually improve activation stability.`,
+    priority: "Medium",
+  });
+
+  return fixes.slice(0, 5);
+}
+
+function buildInstrumentationCoverage(stageMetrics: StageMetric[]) {
+  const hasUnlabeled = stageMetrics.some((stage) => stage.stage === "Unlabeled");
+
+  if (stageMetrics.length <= 1) {
+    return "Low";
+  }
+
+  if (hasUnlabeled) {
+    return "Medium";
+  }
+
+  return "High";
 }
 
 export function analyzeJourney({
@@ -157,13 +264,36 @@ export function analyzeJourney({
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
+  const medianTimeToFirstValueSeconds = median(timeToValue);
+
+  const auditSnapshot = buildAuditSnapshot({
+    totalSessions,
+    sessionsReachedFirstValue,
+    firstValueRate,
+    mostCommonDropoffStage,
+    topRetryEvents,
+    firstValueEvent,
+  });
+
+  const rankedFixes = buildRankedFixes({
+    mostCommonDropoffStage,
+    topRetryEvents,
+    medianTimeToFirstValueSeconds,
+    stageMetrics,
+  });
+
+  const instrumentationCoverage = buildInstrumentationCoverage(stageMetrics);
+
   return {
     totalSessions,
     sessionsReachedFirstValue,
     firstValueRate,
-    medianTimeToFirstValueSeconds: median(timeToValue),
+    medianTimeToFirstValueSeconds,
     mostCommonDropoffStage,
     stageMetrics,
     topRetryEvents,
+    auditSnapshot,
+    rankedFixes,
+    instrumentationCoverage,
   };
 }

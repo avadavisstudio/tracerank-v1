@@ -8,6 +8,12 @@ type AuditPageProps = {
   }>;
 };
 
+type RankedFix = {
+  title: string;
+  why: string;
+  priority: "High" | "Medium" | "Low";
+};
+
 type Summary = {
   totalSessions?: number;
   sessionsReachedFirstValue?: number;
@@ -25,6 +31,9 @@ type Summary = {
     event_name: string;
     count: number;
   }>;
+  auditSnapshot?: string;
+  rankedFixes?: RankedFix[];
+  instrumentationCoverage?: string;
 };
 
 function formatPercent(value?: number) {
@@ -42,31 +51,6 @@ function formatSeconds(value?: number | null) {
   return `${minutes}m ${seconds}s`;
 }
 
-function buildExecutiveSummary(
-  summary: Summary,
-  firstValueEvent: string
-): string {
-  const totalSessions = summary.totalSessions ?? 0;
-  const reached = summary.sessionsReachedFirstValue ?? 0;
-  const dropoffStage = summary.mostCommonDropoffStage || "an unlabeled stage";
-  const rate = formatPercent(summary.firstValueRate);
-
-  return `This audit reviewed ${totalSessions} sessions. ${reached} sessions reached the target first value event "${firstValueEvent}", resulting in a first-value rate of ${rate}. The strongest failure concentration appears around ${dropoffStage}, which is the highest-leverage breakdown zone to fix first.`;
-}
-
-function buildImmediateRead(summary: Summary) {
-  const retries = summary.topRetryEvents || [];
-  const topRetry = retries[0]?.event_name || "no repeated event";
-  const dropoffStage = summary.mostCommonDropoffStage || "the main breakdown stage";
-
-  return [
-    `Fix ${dropoffStage} before redesigning downstream stages.`,
-    `Investigate repeated effort around ${topRetry}.`,
-    `Shorten time to first value and reduce dead time before visible output.`,
-    `Tighten instrumentation around retries, delay, and abandonment transitions.`,
-  ];
-}
-
 export default async function AuditPage({ params }: AuditPageProps) {
   const { id } = await params;
 
@@ -81,7 +65,6 @@ export default async function AuditPage({ params }: AuditPageProps) {
   }
 
   const summary = (audit.summary || {}) as Summary;
-  const immediateRead = buildImmediateRead(summary);
 
   return (
     <>
@@ -101,7 +84,7 @@ export default async function AuditPage({ params }: AuditPageProps) {
         </section>
 
         <section className="border-b border-neutral-200">
-          <div className="mx-auto grid max-w-6xl gap-6 px-6 py-14 md:grid-cols-2 lg:grid-cols-4 md:px-10">
+          <div className="mx-auto grid max-w-6xl gap-6 px-6 py-14 md:grid-cols-2 lg:grid-cols-5 md:px-10">
             <div className="rounded-3xl border border-neutral-200 p-6">
               <p className="text-sm text-neutral-500">Status</p>
               <p className="mt-2 text-2xl font-semibold">{audit.status}</p>
@@ -127,6 +110,13 @@ export default async function AuditPage({ params }: AuditPageProps) {
                 {summary.mostCommonDropoffStage || "—"}
               </p>
             </div>
+
+            <div className="rounded-3xl border border-neutral-200 p-6">
+              <p className="text-sm text-neutral-500">Instrumentation</p>
+              <p className="mt-2 text-2xl font-semibold">
+                {summary.instrumentationCoverage || "—"}
+              </p>
+            </div>
           </div>
         </section>
 
@@ -134,10 +124,10 @@ export default async function AuditPage({ params }: AuditPageProps) {
           <div className="mx-auto grid max-w-6xl gap-6 px-6 py-14 md:px-10 lg:grid-cols-[1.15fr_0.85fr]">
             <div className="rounded-3xl border border-neutral-200 p-8">
               <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-500">
-                Executive summary
+                Audit snapshot
               </p>
               <p className="mt-4 text-base leading-8 text-neutral-800">
-                {buildExecutiveSummary(summary, audit.first_value_event)}
+                {summary.auditSnapshot || "No narrative summary available yet."}
               </p>
             </div>
 
@@ -162,6 +152,18 @@ export default async function AuditPage({ params }: AuditPageProps) {
                   {audit.first_value_event}
                 </p>
               </div>
+
+              <div className="mt-8">
+                <a
+                  href={`data:application/json;charset=utf-8,${encodeURIComponent(
+                    JSON.stringify(audit.summary || {}, null, 2)
+                  )}`}
+                  download={`tracerank-audit-${audit.id}.json`}
+                  className="inline-flex items-center justify-center rounded-full border border-neutral-300 px-5 py-2.5 text-sm font-medium text-black transition hover:bg-neutral-100"
+                >
+                  Download audit JSON
+                </a>
+              </div>
             </div>
           </div>
         </section>
@@ -170,13 +172,34 @@ export default async function AuditPage({ params }: AuditPageProps) {
           <div className="mx-auto grid max-w-6xl gap-6 px-6 py-14 md:px-10 lg:grid-cols-2">
             <div className="rounded-3xl border border-neutral-200 p-8">
               <p className="text-xs font-medium uppercase tracking-[0.22em] text-neutral-500">
-                Immediate read
+                Ranked fixes
               </p>
-              <ol className="mt-6 space-y-4 text-sm leading-7 text-neutral-800">
-                {immediateRead.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ol>
+              <div className="mt-6 space-y-4">
+                {(summary.rankedFixes || []).length === 0 ? (
+                  <p className="text-sm text-neutral-600">
+                    No ranked fixes available yet.
+                  </p>
+                ) : (
+                  (summary.rankedFixes || []).map((fix, index) => (
+                    <div
+                      key={`${fix.title}-${index}`}
+                      className="rounded-2xl bg-neutral-50 p-5"
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <p className="text-base font-semibold text-neutral-900">
+                          {index + 1}. {fix.title}
+                        </p>
+                        <span className="rounded-full border border-neutral-300 px-3 py-1 text-xs font-medium text-neutral-700">
+                          {fix.priority}
+                        </span>
+                      </div>
+                      <p className="mt-3 text-sm leading-7 text-neutral-700">
+                        {fix.why}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
 
             <div className="rounded-3xl border border-neutral-200 p-8">
@@ -262,10 +285,10 @@ export default async function AuditPage({ params }: AuditPageProps) {
                 Recommended next actions
               </p>
               <ol className="mt-6 space-y-4 text-sm leading-7 text-neutral-800">
-                <li>1. Address the dominant breakdown stage before changing downstream flows.</li>
+                <li>1. Address the dominant breakdown stage before redesigning downstream flows.</li>
                 <li>2. Remove repeated effort and retry loops from the highest-friction event.</li>
-                <li>3. Reduce time between initial intent and first visible value.</li>
-                <li>4. Tighten instrumentation around delay, retries, and stage abandonment.</li>
+                <li>3. Reduce delay between intent and first visible value.</li>
+                <li>4. Track stage-level changes after fixes to confirm activation improves.</li>
               </ol>
             </div>
           </div>
